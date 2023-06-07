@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.devsuperior.dscatalog.dto.ProductDTO;
 import com.devsuperior.dscatalog.tests.TestsFactory;
+import com.devsuperior.dscatalog.tests.TokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
@@ -30,24 +31,37 @@ class ProductResourceIntegrationsTest {
 	@Autowired
 	private ObjectMapper mapper;
 	
+	@Autowired
+	private TokenUtil tokenUtil;
+	
 	private long existingId;
 	private long nonExistingId;
 	private long countTotalProducts;
-
+	
+	private String username;
+	private String password;
+	
 	@BeforeEach
 	void setUp() throws Exception {
 		existingId = 1L;
 		nonExistingId = 1000L;
 		countTotalProducts = 25L;
+		
+		username = "maria@gmail.com";
+		password = "123456";
+
 	}
 	
 	@Test
 	public void updateShouldReturnNotFoundWhenIdDoesNotExists() throws Exception {
+		String accessToken = tokenUtil.obtainAccessToken(mockMvc, username, password);
+		
 		ProductDTO productDTO = TestsFactory.createProductDTO();
 		String jsonBody = mapper.writeValueAsString(productDTO);
 				
 		ResultActions result = 
 				mockMvc.perform(put("/products/{id}", nonExistingId)
+						.header("Authorization", "Bearer " + accessToken)
 						.content(jsonBody)
 						.contentType(MediaType.APPLICATION_JSON)
 						.accept(MediaType.APPLICATION_JSON));
@@ -58,6 +72,8 @@ class ProductResourceIntegrationsTest {
 	
 	@Test
 	public void updateShouldReturnProductDTOWhenIdExists() throws Exception {
+		String accessToken = tokenUtil.obtainAccessToken(mockMvc, username, password);
+		
 		ProductDTO productDTO = TestsFactory.createProductDTO();
 		String jsonBody = mapper.writeValueAsString(productDTO);
 		
@@ -66,6 +82,7 @@ class ProductResourceIntegrationsTest {
 		
 		ResultActions result = 
 				mockMvc.perform(put("/products/{id}", existingId)
+						.header("Authorization", "Bearer " + accessToken)
 						.content(jsonBody)
 						.contentType(MediaType.APPLICATION_JSON)
 						.accept(MediaType.APPLICATION_JSON));
